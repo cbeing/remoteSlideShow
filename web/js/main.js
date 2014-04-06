@@ -57,7 +57,7 @@ function backSlide(){
   ws.send('BACK');
 }
 
-function sendFile(aFileContent, aBlocksNumber, aCursor){
+function sendFile(){
   /*
    * Actually, we will send two different messages,
    * The first one is the header, that contains the |SEND| command and
