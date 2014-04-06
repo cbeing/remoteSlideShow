@@ -49,6 +49,14 @@ var server = "127.0.0.1";
 var ws = new WebSocket("ws://"+server+":9000/");
 
 
+function openSlide(){
+  ws.send('OPEN')
+}
+
+function closeSlide(){
+  ws.send('CLOSE')
+}
+
 function nextSlide(){
   ws.send('NEXT');
 }
