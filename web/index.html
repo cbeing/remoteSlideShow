@@ -1,0 +1,31 @@
+<!-- This file is under MIT License, please refer to /LICENSE for more details -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Remote Slide Show</title>
+    <script type="text/javascript">
+    </script>
+  <script src="js/main.js" type="text/javascript" language="javascript">
+  </script>
+  <script type="text/javascript">
+   
+    window.addEventListener('load', function(e) {
+    console.log("Loaded ! ");
+    var input = document.getElementById('fbrowse');
+    input.onchange = readFile;
+    });
+  </script>
+
+  </head>
+  <body>
+    <label for="fbrowse"> The file to read </label><input type="file" id="fbrowse"/>
+
+  <button onclick="sendFile();">Send !</button>
+  <div id="slideContainer">
+  </div>
+  <button onclick="nextSlide();">Next ! </button>
+  <button onclick="backSlide();">Back ! </button>
+  </body>
+
+</html>
