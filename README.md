@@ -7,14 +7,16 @@ A Javascript/Python remote slide show.
 Install:
 --------
 
-For debian like distributions :
-    sudo apt-get install  python-qt4 python-qt4-dev python-poppler-qt4 libpoppler-qt4-dev
+For debian like distributions
+
+    sudo apt-get install python-qt4 python-qt4-dev python-poppler-qt4 libpoppler-qt4-dev
     cd third_party/pypoppler-qt4/
     python configure.py
     sudo make install
 
 Installing python modules : `autobahn twisted`
 Warning, you must have installed the python's package manager. `python-pip`
+
     sudo pip install autobahn[twisted,accelerate]
 
 
