@@ -28,8 +28,6 @@ var fName = "";
 function readFile(e) {
   var f = e.target.files[0];
   if(f){
-    if(f.size > maxFileSize)
-      return;
 
     fSize = f.size;
     fName = f.name;
