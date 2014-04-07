@@ -48,11 +48,11 @@ var ws = new WebSocket("ws://"+server+":9000/");
 
 
 function openSlide(){
-  ws.send('OPEN')
+  ws.send('OPEN');
 }
 
 function closeSlide(){
-  ws.send('CLOSE')
+  ws.send('EXIT');
 }
 
 function nextSlide(){
