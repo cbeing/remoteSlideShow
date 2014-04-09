@@ -35,33 +35,18 @@ class PDFWindow(QtGui.QWidget):
     self.pdfImage = None
     self.currentPage = 0
     self.windowOpened = False
+    # Will contain 3 rendred pages : [Previous, Current, Next]
+    # We use the buffer to avoid performance issues.
+    # Render operation take too much time. Especially on the Pi
+    # For more details see issue#1 on github.
+    self.renderBuffer = [None, None, None]
 
 
-  def paintEvent(self, event):
-    painter = QtGui.QPainter(self)
-    if self.pdfImage is not None:
-      painter.drawImage(0,0, self.pdfImage)
+  def render(self, page):
+    page = self.doc.page(page)
 
-  def next(self):
-
-    if (self.currentPage + 1 < self.doc.numPages()):
-      print "Next"
-      self.currentPage += 1
-      self.display()
-
-  def back(self):
-     if (self.currentPage > 0):
-      print "Back !"
-      self.currentPage -= 1
-      self.display()
-
-  def display(self):
-    print "Displaying stuff ..."
-    if(not self.windowOpened):
-      self.showFullScreen()
-      self.windowOpened = True
-
-    page = self.doc.page(self.currentPage)
+    if not page:
+      return None
 
     pageWidth = page.pageSize().width() * 1.0
     pageHeight = page.pageSize().height() * 1.0
@@ -75,10 +60,49 @@ class PDFWindow(QtGui.QWidget):
     hDPI = (screenWidth / pageWidth) * hDPI  # Zoom
     vDPI = (screenHeight / pageHeight) * vDPI  # Zoom
 
-    if page:
-      self.pdfImage = None
-      self.pdfImage = page.renderToImage(hDPI, vDPI)
-      self.update()
+    pdfImage = page.renderToImage(hDPI, vDPI)
+    return pdfImage
+
+
+  def initRenderBuffer(self):
+    self.renderBuffer[0] = self.render(self.currentPage -1)
+    self.renderBuffer[1] = self.render(self.currentPage)
+    self.renderBuffer[2] = self.render(self.currentPage +1)
+
+  def paintEvent(self, event):
+    painter = QtGui.QPainter(self)
+    if self.pdfImage is not None:
+      painter.drawImage(0,0, self.pdfImage)
+
+  def next(self):
+
+    if (self.currentPage + 1 < self.doc.numPages()):
+      print "Next"
+      self.currentPage += 1
+      self.renderBuffer[0] = self.renderBuffer[1]
+      self.renderBuffer[1] = self.renderBuffer[2]
+      self.display()
+      self.renderBuffer[2] = self.render(self.currentPage + 1)
+
+  def back(self):
+     if (self.currentPage > 0):
+      print "Back !"
+      self.currentPage -= 1
+      self.renderBuffer[2] = self.renderBuffer[1]
+      self.renderBuffer[1] = self.renderBuffer[0]
+      self.display()
+      self.renderBuffer[0] = self.render(self.currentPage - 1)
+
+
+  def display(self):
+    print "Displaying stuff ..."
+    if(not self.windowOpened):
+      self.initRenderBuffer()
+      self.showFullScreen()
+      self.windowOpened = True
+
+    self.pdfImage = self.renderBuffer[1] # We always display the current rendered.
+    self.update()
 
   def hideWin(self):
     self.hide()
