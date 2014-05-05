@@ -43,8 +43,21 @@ function readFile(e) {
 
 
 // websocket :
-var server = "127.0.0.1";
-var ws = new WebSocket("ws://"+server+":9000/");
+var server;
+var ws;
+
+function connect(){
+ server = document.getElementById('ip').value;
+ ws = new WebSocket("ws://"+server+":9000/");
+
+ ws.onerror = function (){
+   console.error("Couldon't connect to :"+server);
+ }
+
+ ws.onopen = function (){
+   console.log('Connected to :'+server);
+ }
+}
 
 
 function openSlide(){
