@@ -31,6 +31,7 @@ from autobahn.twisted.websocket import WebSocketServerProtocol, WebSocketServerF
 import threading
 
 from pdfReader import PDFWindow
+import neverNote
 
 
 
@@ -42,6 +43,8 @@ class ServerHandlerProtocol(WebSocketServerProtocol):
     self.pdfWindowIsOpened = False
     self.path = '/tmp/remoteslideServerd/'
     self.th = QtCore.QThread.currentThread()
+    self.notesCap = []
+    self.notePages = []
 
   def onConnect(self, request):
     pass
@@ -56,6 +59,8 @@ class ServerHandlerProtocol(WebSocketServerProtocol):
       f.write(message)
       f.close()
       self.isWaitingData = False
+      self.notesCap = []
+      self.notePages = []
 
     else:
       cmd = message.split(':')[0]  # Please refer to the doc to see the frame format
@@ -73,6 +78,15 @@ class ServerHandlerProtocol(WebSocketServerProtocol):
         self.th.emit(QtCore.SIGNAL('back()'))
       elif cmd == 'EXIT' and self.pdfWindowIsOpened:
         self.closePdfWindow()
+      elif cmd == 'CAPT':
+        self.notesCap.append(neverNote.CaptureNote(pdfWindow.currentPage))
+        self.notePages.append(pdfWindow.currentPage)
+      elif cmd == 'SAVENOTES':
+        ps = pdfWindow.doc.page(0).pageSize()
+        size = (ps.width(), ps.height()) 
+        noteFname = neverNote.generatePDF(self.notesCap, size)
+        neverNote.addNotesToSlides(self.path + self.fileName, noteFname, self.notePages)
+
 
   def onClose(self, wasClean, code, reason):
     pass

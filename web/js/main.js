@@ -76,6 +76,14 @@ function backSlide(){
   ws.send('BACK');
 }
 
+function captureNote() {
+  ws.send('CAPT');
+}
+
+function saveNotes() {
+  ws.send('SAVENOTES');
+}
+
 function sendFile(){
   /*
    * Actually, we will send two different messages,
