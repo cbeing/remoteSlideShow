@@ -33,7 +33,22 @@ import threading
 from pdfReader import PDFWindow
 import neverNote
 
+import subprocess
+import serial
+import time
 
+'''
+  Values signification : 
+  light : 0 if the light is off, 1 if on.
+  dataShow : 0 if Off, 1 if On.
+  curtains : 0 of Closed, 1 if Opened.
+  ambiantLight : 'S' if night, 'E' if day.
+'''
+classroom_states = {'lights':0, 'dataShow':0, 'curtains':0, 'ambiantLight':'S'}
+
+
+arduino_commands = {'getLight':'A', 'offLight':'B', 'onLight':'C',
+  'offDataShow':'D', 'onDataShow':'E', 'closeCurtains':'F', 'openCurtains':'G'}
 
 
 class ServerHandlerProtocol(WebSocketServerProtocol):
@@ -45,6 +60,7 @@ class ServerHandlerProtocol(WebSocketServerProtocol):
     self.th = QtCore.QThread.currentThread()
     self.notesCap = []
     self.notePages = []
+    self.serial = initSerial()
 
   def onConnect(self, request):
     pass
@@ -100,10 +116,57 @@ class ServerHandlerProtocol(WebSocketServerProtocol):
 
     self.th.emit(QtCore.SIGNAL('display()'))
     self.pdfWindowIsOpened = True
+    self.run_open_routine()
 
   def closePdfWindow(self):
     self.th.emit(QtCore.SIGNAL('close()'))
     self.pdfWindowIsOpened = False
+    self.run_close_routine()
+
+  def run_open_routine(self):
+    print 'Open routine ...'
+    print classroom_states
+
+    # Turning the datashow on
+    if(classroom_states['dataShow'] == 0):
+      self.serial.write(arduino_commands['onDataShow'])
+      classroom_states['dataShow'] = 1
+
+    # We check if the lights are on, then we close them.
+    if(classroom_states['lights'] == 1):
+      self.serial.write(arduino_commands['offLight'])
+      classroom_states['lights'] = 0
+
+    # We close the curtains :
+    if(classroom_states['curtains'] == 1):
+      self.serial.write(arduino_commands['closeCurtains'])
+      classroom_states['curtains'] = 0
+
+  def run_close_routine(self):
+
+    print 'Close routine ...'
+    print classroom_states
+
+    # We start opening the curtains :
+    if(classroom_states['curtains'] == 0):
+      self.serial.write(arduino_commands['openCurtains'])
+      classroom_states['curtains'] = 1
+
+    # Is it necessary to turn the lights on ?
+    # Ambiant light mesurement Request : 
+    self.serial.write(arduino_commands['getLight'])
+    # Reading mesurement :
+    classroom_states['ambiantLight'] = self.serial.read()
+
+    # We check if the lights are on, then we close them.
+    if(classroom_states['lights'] == 0 and classroom_states['ambiantLight'] == 'S'):
+      self.serial.write(arduino_commands['onLight'])
+      classroom_states['lights'] = 1
+
+    # Turning the datashow off
+    if(classroom_states['dataShow'] == 1):
+      self.serial.write(arduino_commands['offDataShow'])
+      classroom_states['dataShow'] = 0
 
 
 class Server(QtCore.QThread):
@@ -120,9 +183,20 @@ class Server(QtCore.QThread):
     reactor.listenTCP(9000, factory)
     reactor.run()
 
-
+def initSerial():
+  fp = open('/tmp/blue_dev', 'r')
+  device = fp.readline()
+  fp.close()
+  s = serial.Serial(device, 9600, timeout=5)
+  return s
 
 if __name__ == '__main__':
+
+  #Running bluetooth pairing and opening connection.
+  subprocess.Popen(['python', '/opt/pairNconnect.py'])
+
+  # We wait a little bit to make sure that the connection is okey
+  time.sleep(3)
 
   app = QtGui.QApplication(sys.argv)
   serverd = Server()
