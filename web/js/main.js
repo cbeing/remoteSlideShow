@@ -84,6 +84,10 @@ function saveNotes() {
   ws.send('SAVENOTES');
 }
 
+function sendMail() {
+  ws.send('SENDMAIL');
+}
+
 function sendFile(){
   /*
    * Actually, we will send two different messages,
