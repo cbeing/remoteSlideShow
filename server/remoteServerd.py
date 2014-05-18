@@ -138,19 +138,14 @@ class ServerHandlerProtocol(WebSocketServerProtocol):
       classroom_states['lights'] = 0
 
     # We close the curtains :
-    if(classroom_states['curtains'] == 1):
-      self.serial.write(arduino_commands['closeCurtains'])
-      classroom_states['curtains'] = 0
+    if(classroom_states['curtains'] == 0):
+      self.serial.write(arduino_commands['openCurtains'])
+      classroom_states['curtains'] = 1
 
   def run_close_routine(self):
 
     print 'Close routine ...'
     print classroom_states
-
-    # We start opening the curtains :
-    if(classroom_states['curtains'] == 0):
-      self.serial.write(arduino_commands['openCurtains'])
-      classroom_states['curtains'] = 1
 
     # Is it necessary to turn the lights on ?
     # Ambiant light mesurement Request : 
@@ -159,7 +154,7 @@ class ServerHandlerProtocol(WebSocketServerProtocol):
     classroom_states['ambiantLight'] = self.serial.read()
 
     # We check if the lights are on, then we close them.
-    if(classroom_states['lights'] == 0 and classroom_states['ambiantLight'] == 'S'):
+    if(classroom_states['lights'] == 0):
       self.serial.write(arduino_commands['onLight'])
       classroom_states['lights'] = 1
 
@@ -167,6 +162,12 @@ class ServerHandlerProtocol(WebSocketServerProtocol):
     if(classroom_states['dataShow'] == 1):
       self.serial.write(arduino_commands['offDataShow'])
       classroom_states['dataShow'] = 0
+
+    # We start opening the curtains :
+    if(classroom_states['curtains'] == 1):
+      self.serial.write(arduino_commands['closeCurtains'])
+      classroom_states['curtains'] = 0
+
 
 
 class Server(QtCore.QThread):
