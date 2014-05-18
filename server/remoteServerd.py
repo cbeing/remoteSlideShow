@@ -102,6 +102,8 @@ class ServerHandlerProtocol(WebSocketServerProtocol):
         size = (ps.width(), ps.height()) 
         noteFname = neverNote.generatePDF(self.notesCap, size)
         neverNote.addNotesToSlides(self.path + self.fileName, noteFname, self.notePages)
+      elif cmd == 'SENDMAIL':
+        subprocess.Popen(['java', '-jar', '/opt/ClientMail.jar'])
 
 
   def onClose(self, wasClean, code, reason):
